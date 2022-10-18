@@ -19,15 +19,17 @@ public class CameraBehavior : MonoBehaviour
 
     [SerializeField] public InputAction mouseAxis;
     [SerializeField] public InputAction targetFire;
+    
+    [SerializeField] private Transform currentCameraTransform;
+    [SerializeField] private Transform currentCameraPivotTransform;
 
     private CameraTargetTriggerZone triggerZone;
-    [SerializeField] private Transform currentCameraTransform;
-
+    private CameraCollision cameraHitbox;
     private Transform target;
     private bool isTargeting = false;
     private bool targetKeyPressed = false;
+    private float minDistBetweenCamAndPivot = 0.1f;
     private Vector2 rotation;
-    private Vector3 cameraOriginPos;
 
     private void OnEnable()
     {
@@ -38,8 +40,9 @@ public class CameraBehavior : MonoBehaviour
     void Start()
     {
         triggerZone = GetComponentInChildren<CameraTargetTriggerZone>();
-        currentCameraTransform = GetComponentInChildren<Camera>().transform;
-        cameraOriginPos = currentCameraTransform.localPosition;
+        cameraHitbox = GetComponentInChildren<CameraCollision>();
+        currentCameraTransform.position = currentCameraPivotTransform.position;
+        currentCameraTransform.gameObject.GetComponent<Rigidbody>().Sleep();
     }
 
     void Update()
@@ -107,23 +110,18 @@ public class CameraBehavior : MonoBehaviour
 
     private void CameraDodgeCollision()
     {
-        RaycastHit hit;
-        // Does the ray intersect any objects excluding the player layer
-        Vector3 originPos = currentCameraTransform.position;
-        Vector3 targetPos = player.position;
-        targetPos -= originPos;
-
-        if (Physics.Raycast(originPos, targetPos, out hit))
+        if (cameraHitbox.isHitting)
         {
-            Debug.DrawRay(originPos, targetPos, Color.yellow);
-            Debug.Log("Did Hit");
+            currentCameraTransform.position += currentCameraTransform.forward * 5 * Time.deltaTime;
+        }
+        else if (Vector3.Distance(currentCameraTransform.position,currentCameraPivotTransform.position) < minDistBetweenCamAndPivot)
+        {
+            if (currentCameraTransform.position != currentCameraPivotTransform.position) 
+                currentCameraTransform.position = currentCameraPivotTransform.position;
         }
         else
         {
-            Debug.DrawRay(originPos, targetPos, Color.white);
-            Debug.Log("Did not Hit");
-
-            if (currentCameraTransform.position != cameraOriginPos) currentCameraTransform.position = cameraOriginPos;
+            currentCameraTransform.position -= currentCameraTransform.forward * 5 * Time.deltaTime;
         }
     }
 }
