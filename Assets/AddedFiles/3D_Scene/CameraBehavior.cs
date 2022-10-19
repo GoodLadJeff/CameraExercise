@@ -123,5 +123,10 @@ public class CameraBehavior : MonoBehaviour
         {
             currentCameraTransform.position -= currentCameraTransform.forward * 5 * Time.deltaTime;
         }
+
+        if (Vector3.Distance(currentCameraTransform.position,player.position) > Vector3.Distance(currentCameraPivotTransform.position + new Vector3(0.5f,0.5f,0.5f),player.position))
+        {
+            currentCameraTransform.position = currentCameraPivotTransform.position;
+        }
     }
 }
