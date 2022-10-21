@@ -6,8 +6,9 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 
 /*
- * to do list
- * camera dodge walls
+ * La camera follow le joueur très précisement quand la camera est unlock
+ * Quand la camera est lock, il a un lerp qui s'active
+ * La camera esquive les murs en se rapprochant du joueur
  */
 
 public class CameraBehavior : MonoBehaviour
@@ -32,13 +33,13 @@ public class CameraBehavior : MonoBehaviour
     private Vector2 rotation;
 
     private void OnEnable()
-    {
+    {//active les inputs
         mouseAxis.Enable();
         targetFire.Enable();
     }
 
     void Start()
-    {
+    {//recupere les elements dans l'objet et endort le rigidbody (parce que le rb est necessaire pour les collisions mais aucune de ses propriétés n'est utilisé sinon)
         triggerZone = GetComponentInChildren<CameraTargetTriggerZone>();
         cameraHitbox = GetComponentInChildren<CameraCollision>();
         currentCameraTransform.position = currentCameraPivotTransform.position;
@@ -51,7 +52,7 @@ public class CameraBehavior : MonoBehaviour
         FollowPlayer();
         CameraDodgeCollision();
 
-        if (isTargeting)
+        if (isTargeting)//swap entre le mode target et non target
             FollowTarget(target);
         else
             MoveCameraWithMouse();
@@ -61,7 +62,7 @@ public class CameraBehavior : MonoBehaviour
     {
         if (isTargeting)
         {
-            transform.position = Vector3.Lerp(transform.position, player.position, Time.deltaTime * lerpSpeed);
+            transform.position = Vector3.Lerp(transform.position, player.position, Time.deltaTime * lerpSpeed);//la camera suit le joueur avec un leger retard
         }
         else transform.position = player.position;
     }
@@ -71,7 +72,7 @@ public class CameraBehavior : MonoBehaviour
         if (t == null) return;
 
         Vector3 relativePos = target.position - transform.position;
-        transform.localRotation = Quaternion.Slerp(transform.localRotation, Quaternion.LookRotation(relativePos), Time.deltaTime * 10);
+        transform.localRotation = Quaternion.Slerp(transform.localRotation, Quaternion.LookRotation(relativePos), Time.deltaTime * 10);//regarde la target avec un effet un peu smooth plutot que de simplement snap dessus
     }
 
     private void MoveCameraWithMouse()
@@ -82,7 +83,7 @@ public class CameraBehavior : MonoBehaviour
     }
 
     private void SetTarget()
-    {
+    {//detect si une target est dans les hitboxes de la cam, et choisi ensuite la plus proche pour la target
         if (targetFire.ReadValue<float>() == 1 && triggerZone.targetList.Count > 0 && !targetKeyPressed)
         {
             isTargeting = !isTargeting;
@@ -109,7 +110,7 @@ public class CameraBehavior : MonoBehaviour
     }
 
     private void CameraDodgeCollision()
-    {
+    {//si la camera collide un objet, elle va s'avancer vers le joueur
         if (cameraHitbox.isHitting)
         {
             currentCameraTransform.position += currentCameraTransform.forward * 5 * Time.deltaTime;
